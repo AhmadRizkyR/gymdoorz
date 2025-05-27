@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -17,6 +17,7 @@ import { PageWrapper } from '../../../components';
 import axios from 'axios';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
+import * as Notifications from 'expo-notifications';
 
 export default function CreateNews({ navigation }) {
     // const navigation = useNavigation();
@@ -113,6 +114,8 @@ export default function CreateNews({ navigation }) {
 
             addDoc(newsRef, newsData);
 
+            await scheduleNotification();
+
             Alert.alert('Success', 'Berita berhasil dibuat');
             navigation.goBack();
         } catch (error) {
@@ -120,6 +123,33 @@ export default function CreateNews({ navigation }) {
             Alert.alert('Error', 'Gagal membuat berita');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const scheduleNotification = async (duration = 5) => {
+        try {
+            // Schedule notification for 1 minute after news is published
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: "News Published!",
+                    body: `News "${formData.title}" has been successfully published`,
+                    data: { newsTitle: formData.title },
+                },
+                trigger: { seconds: duration }, // 1 minute later
+            });
+
+            // You can schedule additional notifications here
+            // For example, a reminder 1 day later
+            // await Notifications.scheduleNotificationAsync({
+            //     content: {
+            //         title: "News Update Reminder",
+            //         body: `Remember to check the engagement on your news "${formData.title}"`,
+            //         data: { newsTitle: formData.title },
+            //     },
+            //     trigger: { seconds: 86400 }, // 24 hours later
+            // });
+        } catch (error) {
+            console.error('Error scheduling notification:', error);
         }
     };
 
